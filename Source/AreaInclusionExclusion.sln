@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.757
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AreaInclusionExclusion", "AreaInclusionExclusion.csproj", "{9CE004C2-604D-406A-ABF5-59A56F50DAE3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Build|Any CPU = Build|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9CE004C2-604D-406A-ABF5-59A56F50DAE3}.Build|Any CPU.ActiveCfg = Build|Any CPU
+		{9CE004C2-604D-406A-ABF5-59A56F50DAE3}.Build|Any CPU.Build.0 = Build|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BF486D51-D6C5-43D7-8F8C-FDDD120B9B99}
+	EndGlobalSection
+EndGlobal
