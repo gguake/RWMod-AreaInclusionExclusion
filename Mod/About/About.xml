@@ -10,6 +10,12 @@
   <url></url>
   <description>
 This mod make you can choose multiple allowed area and exclude some areas.
+
+- Usage
+Left click : include area, same as vanila's but you can include multiple areas.
+Right click : exclude area. all exclusion calculated after inclusions.
+Any click on already included/excluded area : remove area selection.
+
   </description>
 	<modDependencies>
 		<li>
