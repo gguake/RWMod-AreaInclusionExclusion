@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Collections;
 using System.Text.RegularExpressions;
 
-using Harmony;
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 using RimWorld;
@@ -15,11 +15,6 @@ namespace AreaInclusionExclusion
 {
     public class AreaExt : Area
     {
-        private AreaExtID areaExtID;
-
-        private string cachedLabel = "";
-        private Color cachedColor = Color.black;
-
         #region FieldInfos
         internal static class FieldInfos
         {
@@ -29,13 +24,20 @@ namespace AreaInclusionExclusion
         }
         #endregion
 
+        private readonly AreaExtID areaExtID;
+        private string cachedLabel = "";
+        private Color cachedColor = Color.black;
+        private bool initialized = false;
+
+        private AreaExtCellDrawer drawer;
+
         public override string Label => cachedLabel;
         public override Color Color => cachedColor;
-
         public override int ListPriority => int.MaxValue;
         public int MapID => areaExtID.MapID;
         public bool Empty => areaExtID.Areas.Count == 0;
-        private List<KeyValuePair<Area, AreaExtOperator>> InnerAreas
+
+        public List<KeyValuePair<Area, AreaExtOperator>> InnerAreas
         {
             get
             {
@@ -47,11 +49,9 @@ namespace AreaInclusionExclusion
                     innerAreas.Add(new KeyValuePair<Area, AreaExtOperator>(area, areaExtID.Areas[i].Value));
                 }
 
-                innerAreas.SortBy(x => areaManager.AllAreas.IndexOf(x.Key));
                 return innerAreas;
             }
         }
-        private bool initialized = false;
 
         public override string GetUniqueLoadID()
         {
@@ -60,21 +60,21 @@ namespace AreaInclusionExclusion
 
         public AreaExt(AreaExtID areaExtID)
         {
-            AreaExtEventManager.Register(this);
-
             this.areaExtID = areaExtID;
             this.Init();
+
+            AreaExtEventManager.Register(this);
         }
 
         public AreaExt(Map map, AreaExtOperator op, Area area)
         {
-            AreaExtEventManager.Register(this);
-
             var areaIDList = new List<KeyValuePair<int, AreaExtOperator>>();
             areaIDList.Add(new KeyValuePair<int, AreaExtOperator>(area.ID, op));
 
             this.areaExtID = new AreaExtID(map.uniqueID, areaIDList);
             this.Init();
+
+            AreaExtEventManager.Register(this);
         }
 
         public void Init()
@@ -83,6 +83,7 @@ namespace AreaInclusionExclusion
             {
                 base.areaManager = Find.Maps.Find(x => x.uniqueID == areaExtID.MapID).areaManager;
                 FieldInfos.innerGrid.SetValue(this, new BoolGrid(areaManager.map));
+                drawer = new AreaExtCellDrawer(this);
                 Update();
             }
         }
@@ -90,37 +91,27 @@ namespace AreaInclusionExclusion
         public AreaExt CloneWithOperationArea(AreaExtOperator op, Area area)
         {
             List<KeyValuePair<int, AreaExtOperator>> newAreaList = new List<KeyValuePair<int, AreaExtOperator>>(areaExtID.Areas);
+            newAreaList.RemoveAll(x => x.Key == area.ID);
 
-            if (op == AreaExtOperator.Inclusion || op == AreaExtOperator.Exclusion)
+            AreaExtID newID = areaExtID;
+            if (op == AreaExtOperator.Inclusion)
             {
-                var existingAreaIndex = newAreaList.FindIndex(x => x.Key == area.ID);
-                if (existingAreaIndex < 0)
-                {
-                    newAreaList.Add(new KeyValuePair<int, AreaExtOperator>(area.ID, op));
-                }
-                else
-                {
-                    newAreaList[existingAreaIndex] = new KeyValuePair<int, AreaExtOperator>(area.ID, op);
-                }
+                newAreaList.Insert(0, new KeyValuePair<int, AreaExtOperator>(area.ID, AreaExtOperator.Inclusion));
+            }
+            else if (op == AreaExtOperator.Exclusion)
+            {
+                newAreaList.Add(new KeyValuePair<int, AreaExtOperator>(area.ID, AreaExtOperator.Exclusion));
             }
             else
             {
-                var existingAreaIndex = newAreaList.FindIndex(x => x.Key == area.ID);
-                if (existingAreaIndex < 0)
+                if (newAreaList.Count == 0)
                 {
-                    return new AreaExt(areaExtID);
-                }
-                else
-                {
-                    newAreaList.RemoveAll(x => x.Key == area.ID);
-                    if (newAreaList.Count == 0)
-                    {
-                        return null;
-                    }
+                    return null;
                 }
             }
 
-            return new AreaExt(new AreaExtID(areaManager.map.uniqueID, newAreaList));
+            newID = new AreaExtID(areaManager.map.uniqueID, newAreaList);
+            return new AreaExt(newID);
         }
 
         public AreaExtOperator GetAreaOperator(int areaID)
@@ -136,8 +127,17 @@ namespace AreaInclusionExclusion
             }
         }
 
+        public static BitArray GetAreaBitArray(Area area)
+        {
+            return new BitArray((bool[])FieldInfos.boolGridArr.GetValue(FieldInfos.innerGrid.GetValue(area)));
+        }
+
         public void Update()
         {
+#if DEBUG
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+#endif
+
             Map map = Find.Maps.Find(x => x.uniqueID == areaExtID.MapID);
             this.areaManager = map.areaManager;
 
@@ -145,10 +145,9 @@ namespace AreaInclusionExclusion
 
             BoolGrid innerGrid = (BoolGrid)FieldInfos.innerGrid.GetValue(this);
             bool[] arr = (bool[])FieldInfos.boolGridArr.GetValue(innerGrid);
-            int length = arr.Length;
 
             BitArray arrBA = new BitArray(arr);
-            if (innerAreas.Count > 0 && innerAreas[0].Value == AreaExtOperator.Inclusion)
+            if (innerAreas.Count > 0 && innerAreas.Any(x => x.Value == AreaExtOperator.Inclusion))
             {
                 arrBA.SetAll(false);
             }
@@ -157,58 +156,37 @@ namespace AreaInclusionExclusion
                 arrBA.SetAll(true);
             }
 
-            foreach (var kv in innerAreas)
+            var areaNameBuilder = new StringBuilder();
+            for (int i = 0; i < innerAreas.Count; ++i)
             {
+                var kv = innerAreas[i];
+
                 Area area = kv.Key;
                 AreaExtOperator op = kv.Value;
-                bool[] targetArr = (bool[])FieldInfos.boolGridArr.GetValue(FieldInfos.innerGrid.GetValue(area));
+
+                BitArray targetArrBA = GetAreaBitArray(area);
                 if (op == AreaExtOperator.Inclusion)
                 {
-                    if (targetArr.Length == length)
+                    arrBA = arrBA.Or(targetArrBA);
+                    if (i > 0)
                     {
-                        BitArray targetArrBA = new BitArray(targetArr);
-                        arrBA = arrBA.Or(targetArrBA);
-                    }
-                    else
-                    {
-                        Log.Warning(string.Format("Area Inclusion is skipped since array size is not match {0}, {1} != {2}", this.GetUniqueLoadID(), targetArr.Length, length));
+                        areaNameBuilder.Append("+");
                     }
                 }
                 else if (op == AreaExtOperator.Exclusion)
                 {
-                    if (targetArr.Length == length)
-                    {
-                        BitArray targetArrBA = new BitArray(targetArr).Not();
-                        arrBA = arrBA.And(targetArrBA);
-                    }
-                    else
-                    {
-                        Log.Warning(string.Format("Area Exclusion is skipped since array size is not match {0}, {1} != {2}", this.GetUniqueLoadID(), targetArr.Length, length));
-                    }
+                    arrBA = arrBA.And(targetArrBA.Not());
+                    areaNameBuilder.Append("-");
                 }
+
+                areaNameBuilder.Append(area.Label);
             }
 
             arrBA.CopyTo(arr, 0);
             FieldInfos.boolGridArr.SetValue(innerGrid, arr);
             FieldInfos.boolGridTrueCount.SetValue(innerGrid, arr.Count(x => x));
-
-            var builder = new StringBuilder();
-            for (int i = 0; i < innerAreas.Count; ++i)
-            {
-                if (i > 0 && innerAreas[i].Value == AreaExtOperator.Inclusion)
-                {
-                    builder.Append("+");
-                }
-
-                if (innerAreas[i].Value == AreaExtOperator.Exclusion)
-                {
-                    builder.Append("-");
-                }
-
-                builder.Append(innerAreas[i].Key.Label);
-            }
-
-            cachedLabel = builder.ToString();
+            
+            cachedLabel = areaNameBuilder.ToString();
 
             if (innerAreas.Count == 1)
             {
@@ -220,13 +198,19 @@ namespace AreaInclusionExclusion
             }
 
             initialized = true;
+            drawer.dirty = true;
+
+#if DEBUG
+            watch.Stop();
+            Log.Message(string.Format("Update elapsed : {0}", watch.ElapsedMilliseconds));
+#endif
         }
 
         public void OnAreaEdited(Area area)
         {
             if (areaExtID.Areas.Any(x => x.Key == area.ID))
             {
-                Update();
+                initialized = false;
             }
         }
 
@@ -234,8 +218,25 @@ namespace AreaInclusionExclusion
         {
             if (areaExtID.Areas.Any(x => x.Key == area.ID))
             {
-                areaExtID.Areas.RemoveAll(x => x.Key == area.ID);
+                initialized = false;
+            }
+        }
+
+        public void OnAreaUpdate()
+        {
+            if (!initialized)
+            {
                 Update();
+            }
+
+            drawer.Update();
+        }
+
+        public new void MarkForDraw()
+        {
+            if (MapID == Find.CurrentMap.uniqueID)
+            {
+                drawer.MarkForDraw();
             }
         }
     }

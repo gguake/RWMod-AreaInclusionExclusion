@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Reflection.Emit;
 
-using Harmony;
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 using RimWorld;

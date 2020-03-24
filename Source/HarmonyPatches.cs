@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Reflection.Emit;
 
-using Harmony;
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 using RimWorld;
@@ -18,9 +18,12 @@ namespace AreaInclusionExclusion
     {
         static HarmonyPatches()
         {
-            HarmonyInstance harmony = HarmonyInstance.Create(id: "rimworld.gguake.areainclusionexclusion.main");
+            Harmony harmony = new Harmony(id: "rimworld.gguake.areainclusionexclusion.main");
 
             #region AreaAllowedGUI
+            harmony.Patch(AccessTools.Method(type: typeof(AreaAllowedGUI), name: "DoAllowedAreaSelectors"),
+                transpiler: new HarmonyMethod(typeof(Patches.AreaAllowedGUIPatches), nameof(Patches.AreaAllowedGUIPatches.DoAllowedAreaSelectorsTranspiler)));
+
             harmony.Patch(AccessTools.Method(type: typeof(AreaAllowedGUI), name: "DoAreaSelector"),
                 prefix: new HarmonyMethod(typeof(Patches.AreaAllowedGUIPatches), nameof(Patches.AreaAllowedGUIPatches.DoAreaSelectorPrefix)));
             #endregion
@@ -37,6 +40,9 @@ namespace AreaInclusionExclusion
             #endregion
 
             #region Area
+            harmony.Patch(AccessTools.Method(type: typeof(Area), name: "MarkForDraw"),
+                prefix: new HarmonyMethod(typeof(Patches.AreaPatches), nameof(Patches.AreaPatches.MarkForDrawPrefix)));
+
             harmony.Patch(AccessTools.Method(type: typeof(Area), name: "MarkDirty"),
                 postfix: new HarmonyMethod(typeof(Patches.AreaPatches), nameof(Patches.AreaPatches.MarkDirtyPostfix)));
 
@@ -63,7 +69,7 @@ namespace AreaInclusionExclusion
             harmony.Patch(AccessTools.Method(type: typeof(Pawn_PlayerSettings), name: "Notify_AreaRemoved"),
                 postfix: new HarmonyMethod(typeof(Patches.PlayerSettingsPatches), nameof(Patches.PlayerSettingsPatches.NotifyAreaRemovedPostfix)));
 
-            Log.Message("Area Inclusion + Exclusion Harmony Patched");
+            Log.Message("[Area Inclusion&Exclusion] harmony patched");
 
         }
     }

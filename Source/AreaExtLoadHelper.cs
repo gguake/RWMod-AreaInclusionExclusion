@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Reflection;
 using System.Collections;
+using System.Collections.Generic;
 
-using Harmony;
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 using RimWorld;
@@ -25,7 +23,7 @@ namespace AreaInclusionExclusion
             }
 
             AreaExt areaExt;
-            WeakReference<AreaExt> refAreaExt = cache[areaExtID.MapID].FirstOrDefault(x => x.IsAlive && x.Target.GetUniqueLoadID() == id);
+            WeakReference<AreaExt> refAreaExt = cache[areaExtID.MapID].Find(x => x.IsAlive && x.Target.GetUniqueLoadID() == id);
             if (refAreaExt != null)
             {
                 areaExt = refAreaExt.Target;
