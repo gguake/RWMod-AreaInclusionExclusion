@@ -50,6 +50,14 @@ namespace AreaInclusionExclusion
             }
         }
 
+        public void OnAreaRemoved(Area area)
+        {
+            if (MapID == area.Map.uniqueID && Areas.Any(x => x.Key == area.ID))
+            {
+                Areas.RemoveAll(x => x.Key == area.ID);
+            }
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();

@@ -219,6 +219,7 @@ namespace AreaInclusionExclusion
             if (areaExtID.Areas.Any(x => x.Key == area.ID))
             {
                 initialized = false;
+                areaExtID.OnAreaRemoved(area);
             }
         }
 
