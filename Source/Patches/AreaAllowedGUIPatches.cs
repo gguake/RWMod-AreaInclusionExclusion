@@ -215,8 +215,11 @@ namespace AreaInclusionExclusion.Patches
                 {
                     if (area == null)
                     {
-                        p.playerSettings.AreaRestriction = null;
-                        SoundDefOf.Designate_DragStandard_Changed.PlayOneShotOnCamera(null);
+                        if (p.playerSettings.AreaRestriction != null)
+                        {
+                            p.playerSettings.AreaRestriction = null;
+                            SoundDefOf.Designate_DragStandard_Changed.PlayOneShotOnCamera(null);
+                        }
                     }
                     else if (currentAreaExt != null)
                     {
@@ -237,8 +240,11 @@ namespace AreaInclusionExclusion.Patches
                 {
                     if (area == null)
                     {
-                        p.playerSettings.AreaRestriction = null;
-                        SoundDefOf.Designate_DragStandard_Changed.PlayOneShotOnCamera(null);
+                        if (p.playerSettings.AreaRestriction != null)
+                        {
+                            p.playerSettings.AreaRestriction = null;
+                            SoundDefOf.Designate_DragStandard_Changed.PlayOneShotOnCamera(null);
+                        }
                     }
                     else if (currentAreaExt != null)
                     {
@@ -272,8 +278,11 @@ namespace AreaInclusionExclusion.Patches
                     {
                         if (currentArea != null)
                         {
-                            p.playerSettings.AreaRestriction = null;
-                            SoundDefOf.Designate_DragStandard_Changed.PlayOneShotOnCamera(null);
+                            if (p.playerSettings.AreaRestriction != null)
+                            {
+                                p.playerSettings.AreaRestriction = null;
+                                SoundDefOf.Designate_DragStandard_Changed.PlayOneShotOnCamera(null);
+                            }
                         }
                     }
                 }
