@@ -71,6 +71,7 @@
     <Compile Include="Patches\AreaManagerPatches.cs" />
     <Compile Include="Patches\AreaPatches.cs" />
     <Compile Include="Patches\DebugLoadIDsSavingErrorsCheckerPatches.cs" />
+    <Compile Include="Patches\GamePatches.cs" />
     <Compile Include="Patches\LoadIDsWantedBankPatches.cs" />
     <Compile Include="Patches\PlayerSettingsPatches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

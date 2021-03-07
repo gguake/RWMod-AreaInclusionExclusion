@@ -139,6 +139,11 @@ namespace AreaInclusionExclusion
 #endif
 
             Map map = Find.Maps.Find(x => x.uniqueID == areaExtID.MapID);
+            if (map == null)
+            {
+                return;
+            }
+
             this.areaManager = map.areaManager;
 
             var innerAreas = InnerAreas;

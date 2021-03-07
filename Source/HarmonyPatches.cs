@@ -66,8 +66,18 @@ namespace AreaInclusionExclusion
                 postfix: new HarmonyMethod(typeof(Patches.LoadIDsWantedBankPatches), nameof(Patches.LoadIDsWantedBankPatches.RegisterLoadIDReadFromXmlPostfix)));
             #endregion
 
+            #region Pawn_PlayerSettings
+            harmony.Patch(AccessTools.PropertySetter(typeof(Pawn_PlayerSettings), "AreaRestriction"),
+                prefix: new HarmonyMethod(typeof(Patches.PlayerSettingsPatches), nameof(Patches.PlayerSettingsPatches.AreaRestrictionSetterPrefix)));
+
             harmony.Patch(AccessTools.Method(type: typeof(Pawn_PlayerSettings), name: "Notify_AreaRemoved"),
                 postfix: new HarmonyMethod(typeof(Patches.PlayerSettingsPatches), nameof(Patches.PlayerSettingsPatches.NotifyAreaRemovedPostfix)));
+            #endregion
+
+            #region Game
+            harmony.Patch(AccessTools.Method(type: typeof(MapComponentUtility), name: "MapRemoved"),
+                postfix: new HarmonyMethod(typeof(Patches.GamePatches), nameof(Patches.GamePatches.MapRemovedPostfix)));
+            #endregion
 
             Log.Message("[Area Inclusion&Exclusion] harmony patched");
 
