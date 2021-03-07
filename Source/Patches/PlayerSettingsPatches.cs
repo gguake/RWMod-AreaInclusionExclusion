@@ -33,7 +33,7 @@ namespace AreaInclusionExclusion.Patches
                     value = null;
                 }
 
-                if (areaExt.InnerAreas.Count == 1)
+                if (areaExt.IsOneInclusion)
                 {
                     value = areaExt.InnerAreas[0].Key;
                 }

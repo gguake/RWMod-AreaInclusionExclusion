@@ -36,6 +36,7 @@ namespace AreaInclusionExclusion
         public override int ListPriority => int.MaxValue;
         public int MapID => areaExtID.MapID;
         public bool Empty => areaExtID.Areas.Count == 0;
+        public bool IsOneInclusion => areaExtID.Areas.Count == 1 && areaExtID.Areas[0].Value == AreaExtOperator.Inclusion;
 
         public List<KeyValuePair<Area, AreaExtOperator>> InnerAreas
         {
