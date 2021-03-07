@@ -51,7 +51,9 @@ namespace AreaInclusionExclusion
         {
             CheckAndRemoveDeadRef();
 
+#if DEBUG
             Log.Message($"Area {area.ID} Removed");
+#endif
 
             foreach (var areaExt in allAreaExts)
             {
