@@ -34,7 +34,7 @@ namespace AreaInclusionExclusion
             }
 #endif
 
-            allAreaExts.RemoveAll(x => !x.IsAlive || x.Target.Map == null); //It's possible that target isn't null but there is no map, id is 0xFFFFFF and area is empty
+            allAreaExts.RemoveAll(x => !x.IsAlive || x.Target.areaManager == null); //It's possible that target isn't null but there is no map, id is 0xFFFFFF and area is empty
         }
 
         public static void OnAreaEdited(Area area)
